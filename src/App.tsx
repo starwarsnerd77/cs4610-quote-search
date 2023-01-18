@@ -1,32 +1,50 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+
+  // async function randomQuote() {
+  //   const result = await fetch("https://api.quotable.io/random")
+  //     .then((response) => response.json())
+  //     .then((data) => data.content);
+  //   const quoteList: string[] = [];
+  //   quoteList.push(await result);
+  //   return quoteList;
+  // }
+
+  const [value, setValue] = useState("");
+  const defaultQuote: string[] = [];
+  const [quotes, setQuotes] = useState(defaultQuote);
+
+  async function handleKeyDown(event: any) {
+    if (event.key === 'Enter') {
+      const result = await fetch("https://api.quotable.io/search/quotes?query=" + event.target.value + "&fields=author")
+        .then((response) => response.json())
+        .then((data) => data.results);
+      const quoteList: string[] = [];
+      for (let i = 0; i < result.length; i++) {
+        quoteList.push(await result[i].content)
+      }
+      setQuotes(quoteList);
+      console.log(quoteList);
+    }
+  }
 
   return (
     <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
+      <h1>Quote Search</h1>
       <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+        <input 
+          type="text"
+          placeholder="Search here..."
+          value={value}
+          onChange={(event: any) => setValue(() => event.target.value)}
+          onKeyDown={handleKeyDown}
+        />
+        {quotes.map(quote => (
+          <h3>{quote}</h3>
+        ))}
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </div>
   )
 }
