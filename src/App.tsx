@@ -1,48 +1,56 @@
-import { useState } from 'react'
+import { useState, useEffect, ChangeEvent, KeyboardEvent } from 'react'
 import './App.css'
 
 function App() {
 
-  // async function randomQuote() {
-  //   const result = await fetch("https://api.quotable.io/random")
-  //     .then((response) => response.json())
-  //     .then((data) => data.content);
-  //   const quoteList: string[] = [];
-  //   quoteList.push(await result);
-  //   return quoteList;
-  // }
-
   const [value, setValue] = useState("");
-  const defaultQuote: string[] = [];
-  const [quotes, setQuotes] = useState(defaultQuote);
+  const [quotes, setQuotes] = useState<Array<string[]>>([]);
+  const [hidden, setHidden] = useState(false);
 
-  async function handleKeyDown(event: any) {
+  async function randomQuote() {
+    const result = await fetch("https://usu-quotes-mimic.vercel.app/api/random" )
+        .then((response) => response.json())
+        .then((data) => [data.author, data.content]);
+    setQuotes([result]);
+  }
+
+  useEffect(() => {
+    randomQuote();
+  }, []);
+
+  async function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === 'Enter') {
-      const result = await fetch("https://api.quotable.io/search/quotes?query=" + event.target.value + "&fields=author")
+      const result = await fetch("https://usu-quotes-mimic.vercel.app/api/search?query=" + event.currentTarget.value + "&fields=author")
         .then((response) => response.json())
         .then((data) => data.results);
-      const quoteList: string[] = [];
+      const quoteList: Array<string[]> = [];
       for (let i = 0; i < result.length; i++) {
-        quoteList.push(await result[i].content)
+        const temp: string[] = [];
+        temp.push(await result[i].author, await result[i].content)
+        quoteList.push(temp)
       }
+      setHidden(true);
       setQuotes(quoteList);
-      console.log(quoteList);
     }
   }
 
   return (
     <div className="App">
-      <h1>Quote Search</h1>
-      <div className="card">
+      <h1 hidden={hidden}>Quote Search</h1>
+      <div>
         <input 
           type="text"
           placeholder="Search here..."
           value={value}
-          onChange={(event: any) => setValue(() => event.target.value)}
+          onChange={event => setValue(event.target.value)}
           onKeyDown={handleKeyDown}
+          id="search"
         />
         {quotes.map(quote => (
-          <h3>{quote}</h3>
+          <div className='card'>
+            <h3>{quote[1]}</h3>
+            <p>{quote[0]}</p>
+          </div>
         ))}
       </div>
     </div>
